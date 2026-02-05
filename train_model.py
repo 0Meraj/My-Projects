@@ -13,35 +13,58 @@ import whois
 from datetime import datetime, timezone
 import math
 
-# ===============================
-# LOAD PHISHTANK DATA
-# ===============================
-phish = pd.read_csv("verified_online.csv", low_memory=False)
-print("PHISH CSV LOADED:", phish.shape)
+phishing_urls = [
+    "http://paypal-secure-login.com/verify",
+    "https://secure-paypa1.com/login",
+    "http://account-google.verify-user.net",
+    "https://facebook-login-security.com/auth",
+    "http://appleid-confirmation.net/login",
+    "https://microsoft-account-secure.com/update",
+    "http://amazon-verification-alert.com/signin",
+    "https://bankofamerica-secure-check.com/login",
+    "http://instagram-security-alert.net/verify",
+    "https://github-account-authenticate.com/login",
+    "http://paypal.com.user-confirmation.ru/login",
+    "https://secure-google-account-update.info",
+    "http://login-facebook-helpdesk.com/auth",
+    "https://apple-support-verifyid.net/confirm",
+    "http://amazon-account-protection.co/verify"
+]
 
-phish = phish[phish["verified"] == "yes"]
-phish = phish[["url"]].dropna()
-phish["label"] = 1  # phishing
+legitimate_urls = [
+    "https://www.google.com",
+    "https://www.facebook.com",
+    "https://www.microsoft.com",
+    "https://www.apple.com",
+    "https://www.amazon.com",
+    "https://www.paypal.com",
+    "https://www.github.com",
+    "https://www.linkedin.com",
+    "https://www.twitter.com",
+    "https://www.instagram.com",
+    "https://www.bankofamerica.com",
+    "https://www.wikipedia.org",
+    "https://www.bbc.co.uk",
+    "https://www.stackoverflow.com",
+    "https://www.reddit.com"
+]
 
-# ===============================
-# LOAD TRANCO LEGIT DOMAINS
-# ===============================
-legit = pd.read_csv("tranco_QW244.csv")
+phish = pd.DataFrame({
+    "url": phishing_urls,
+    "label": 1
+})
 
-# Tranco files usually have: rank, domain
-# Adjust column name ONLY if needed
-legit = legit[["domain"]].dropna()
+legit = pd.DataFrame({
+    "url": legitimate_urls,
+    "label": 0
+})
 
-# Convert domains -> URLs
-legit["url"] = "https://" + legit["domain"]
-legit["label"] = 0
-legit = legit[["url", "label"]]
+print("PHISH DATASET:", phish.shape)
+print("LEGIT DATASET:", legit.shape)
 
-print("TRANCO CSV LOADED:", legit.shape)
+data = pd.concat([phish, legit], ignore_index=True)
+print("TOTAL DATASET:", data.shape)
 
-# ===============================
-# OPTIONAL: REMOVE DOMAIN OVERLAP
-# ===============================
 def extract_domain(url):
     parsed = urlparse(url)
     return re.sub(r'^(www\.|m\.)', '', parsed.netloc.lower())
@@ -49,15 +72,9 @@ def extract_domain(url):
 phish_domains = set(phish["url"].apply(extract_domain))
 legit = legit[~legit["url"].apply(extract_domain).isin(phish_domains)]
 
-# ===============================
-# COMBINE DATASETS
-# ===============================
 data = pd.concat([phish, legit], ignore_index=True)
 print("TOTAL DATASET:", data.shape)
 
-# ===============================
-# FEATURE ENGINEERING
-# ===============================
 protected_brands = [
     "paypal", "google", "facebook", "microsoft", "apple",
     "linkedin", "twitter", "amazon", "github",
@@ -147,9 +164,6 @@ def shannon_entropy(s):
     probs = [s.count(c) / len(s) for c in set(s)]
     return -sum(p * math.log2(p) for p in probs)
 
-# ===============================
-# APPLY FEATURES
-# ===============================
 data["domain"] = data["url"].apply(extract_domain)
 data["tokens"] = data["domain"].apply(normalize_domain)
 data["entropy"] = data["domain"].apply(shannon_entropy)
@@ -173,9 +187,6 @@ data[["path_hits", "has_suspicious_path"]] = pd.DataFrame(
     index=data.index
 )
 
-# ===============================
-# VECTORIZATION + MODEL
-# ===============================
 vectorizer = TfidfVectorizer(
     analyzer="char",
     ngram_range=(3, 5),
