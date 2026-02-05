@@ -91,8 +91,6 @@
     </form>
 
     {% if result %}
-        <button class="system-report-btn" onclick="openModal()">System Report</button>
-
         <h2 style="margin-top:20px;">{{ result.label }}</h2>
 
         <p style="margin-top:15px; line-height:1.5;">
@@ -104,22 +102,6 @@
         <p class="confidence" id="confidence">
             The system is {{ result.confidence }}% confident in this assessment.
         </p>
-
-        <div class="modal" id="modal">
-            <div class="modal-content">
-                <h3>System Report</h3>
-                <table>
-                    {% for k, v in result.system_report.items() %}
-                    <tr>
-                        <td><strong>{{ k }}</strong></td>
-                        <td>{{ v }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
-                <br>
-                <button onclick="closeModal()">Close</button>
-            </div>
-        </div>
     {% endif %}
 </div>
 
