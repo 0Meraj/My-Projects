@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import re
+import json
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
@@ -65,7 +66,13 @@ model = RandomForestClassifier(
 
 model.fit(X_train, y_train)
 
+report = classification_report(y_test, model.predict(X_test), zero_division=0, output_dict=True)
 print(classification_report(y_test, model.predict(X_test), zero_division=0))
+
+with open("report.json", "w") as f:
+    json.dump(report, f)
+
+print("report.json saved.")
 
 # ---------------------------
 # Save
