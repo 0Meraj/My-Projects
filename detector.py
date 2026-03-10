@@ -15,13 +15,17 @@ def predict_url(url):
     pred = model.predict(features)[0]
     prob = model.predict_proba(features)[0][pred]
 
-    # Top 3 most significant flags (human labels only)
+    # Top 3 most significant flags for chat bubbles
     top_flags = [label for (_, label, _) in flagged[:3]]
+
+    # All flags for technical report
+    all_flags = [{"label": label, "severity": sev} for (_, label, sev) in flagged]
 
     result = {
         "label":      "PHISHING" if pred else "LEGITIMATE",
         "confidence": round(prob * 100, 2),
         "flags":      top_flags,
+        "all_flags":  all_flags,
     }
 
     return result

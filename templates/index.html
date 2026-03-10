@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PhishGuard</title>
+  <title>SecureCatch</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,13 +27,20 @@
 
     #landing { width: 100%; max-width: 500px; text-align: center; animation: fadeInUp 0.5s ease both; }
 
-    .logo { display: flex; align-items: center; justify-content: center; gap: 11px; margin-bottom: 6px; }
+    .site-title {
+      font-size: 2rem; font-weight: 600; color: var(--text);
+      margin-bottom: 6px; letter-spacing: -0.02em;
+      display: inline-block;
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+      cursor: default;
+    }
+    .site-title:hover { transform: scale(1.07); }
 
     .tagline { color: var(--text-dim); font-size: 0.875rem; font-weight: 300; margin-bottom: 38px; }
 
-    .input-row { display: flex; gap: 9px; }
+    .input-col { display: flex; flex-direction: column; gap: 9px; }
     #url-input {
-      flex: 1; background: var(--input-bg); border: 1px solid rgba(255,255,255,0.13);
+      width: 100%; background: var(--input-bg); border: 1px solid rgba(255,255,255,0.13);
       border-radius: 11px; padding: 13px 16px; color: var(--text);
       font-family: inherit; font-size: 0.9rem; font-weight: 300; outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
@@ -42,26 +49,38 @@
     #url-input:focus { border-color: rgba(255,255,255,0.3); box-shadow: 0 0 0 3px rgba(255,255,255,0.04); }
 
     .btn-analyze {
-      background: var(--green-grad); border: none; border-radius: 11px;
+      width: 180px; align-self: center; background: var(--green-grad); border: none; border-radius: 11px;
       padding: 13px 22px; color: #fff; font-family: inherit; font-size: 0.9rem;
-      font-weight: 600; cursor: pointer; white-space: nowrap;
+      font-weight: 600; cursor: pointer;
       transition: opacity 0.2s, transform 0.12s; box-shadow: 0 4px 20px rgba(74,238,128,0.18);
     }
     .btn-analyze:hover { opacity: 0.88; }
-    .btn-analyze:active { transform: scale(0.96); }
+    .btn-analyze:active { transform: scale(0.98); }
 
     /* ── Chat screen wrapper ── */
     #chat-screen { display: none; width: 100%; max-width: 620px; flex-direction: column; height: 90vh; max-height: 760px; position: relative; }
+
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
     .report-btn {
       background: rgba(255,255,255,0.06); border: 1px solid var(--panel-border);
       border-radius: 8px; padding: 6px 12px; color: var(--text-dim);
       font-family: inherit; font-size: 0.75rem; font-weight: 500;
       cursor: pointer; transition: background 0.2s, color 0.2s; white-space: nowrap;
-      display: flex; align-items: center; gap: 6px; align-self: flex-end; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
     }
     .report-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
     .report-btn svg { width: 12px; height: 12px; fill: currentColor; }
+
+    .back-btn {
+      background: rgba(255,255,255,0.06); border: 1px solid var(--panel-border);
+      border-radius: 8px; padding: 6px 12px; color: var(--text-dim);
+      font-family: inherit; font-size: 0.75rem; font-weight: 500;
+      cursor: pointer; transition: background 0.2s, color 0.2s; white-space: nowrap;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .back-btn svg { width: 12px; height: 12px; fill: currentColor; }
 
     .chat-window {
       flex: 1; background: var(--glass-bg); backdrop-filter: blur(24px);
@@ -100,7 +119,6 @@
     .verdict-label.legit     { color: var(--green-tag); }
     .verdict-explanation { font-size: 0.835rem; color: var(--text-dim); line-height: 1.6; font-weight: 300; }
 
-    /* Flag chips */
     .flags-header {
       font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em;
       text-transform: uppercase; color: var(--text-dim); margin-bottom: 9px;
@@ -118,11 +136,26 @@
       box-shadow: 0 0 6px rgba(255,64,96,0.5);
     }
 
-    /* Caution bubble */
     .caution-text {
       font-size: 0.855rem; color: var(--text-dim); line-height: 1.6; font-weight: 300;
     }
     .caution-text strong { color: var(--text); font-weight: 500; }
+
+    .action-step {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 7px 0; font-size: 0.835rem; line-height: 1.5; color: var(--text);
+    }
+    .action-step:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .step-number {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(255,64,96,0.15); border: 1px solid rgba(255,64,96,0.3);
+      color: var(--red); font-size: 0.7rem; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+    }
+    .step-number.safe {
+      background: rgba(66,217,106,0.12); border-color: rgba(66,217,106,0.3);
+      color: var(--green-tag);
+    }
 
     .typing-indicator { display: flex; gap: 5px; align-items: center; padding: 13px 16px; }
     .typing-indicator span {
@@ -132,7 +165,8 @@
     .typing-indicator span:nth-child(2) { animation-delay: 0.18s; }
     .typing-indicator span:nth-child(3) { animation-delay: 0.36s; }
 
-    .chat-input-area { padding: 14px 4px 0; }
+    .chat-input-area { padding: 14px 4px 0; display: flex; flex-direction: column; gap: 8px; }
+
     .confidence-bar {
       display: flex; align-items: center; gap: 10px; background: var(--input-bg);
       border: 1px solid rgba(255,255,255,0.13); border-radius: 12px;
@@ -141,7 +175,7 @@
     }
     .confidence-bar:hover { border-color: rgba(255,255,255,0.26); background: #202024; }
     .confidence-bar.sent  { opacity: 0.35; pointer-events: none; }
-    .confidence-bar-text  { flex: 1; color: var(--text-dim); font-size: 0.86rem; font-weight: 300; }
+    .confidence-bar-text  { flex: 1; color: var(--text); font-size: 0.86rem; font-weight: 300; }
 
     .send-btn {
       width: 30px; height: 30px; background: var(--green-grad); border: none;
@@ -150,9 +184,6 @@
     }
     .send-btn svg { width: 13px; height: 13px; fill: #fff; }
 
-    /* ══════════════════════════
-       SIDE PANEL
-    ══════════════════════════ */
     #report-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.45); z-index: 100;
@@ -218,12 +249,12 @@
 <body>
 
   <div id="landing">
-    <div class="logo">
-      <img src="{{ url_for('static', filename='phishing_logo.png') }}" alt="PhishGuard logo" style="width:300px;height:auto;"/>
+    <div style="margin-bottom:6px;">
+      <span class="site-title">SecureCatch</span>
     </div>
     <p class="tagline">Paste any URL and let the system analyse it for threats.</p>
     <form id="scan-form" method="POST" onsubmit="handleSubmit(event)">
-      <div class="input-row">
+      <div class="input-col">
         <input id="url-input" type="url" name="url" placeholder="https://example.com/login"
           required autocomplete="off" spellcheck="false" value="{{ submitted_url }}"/>
         <button class="btn-analyze" type="submit">Analyse</button>
@@ -232,15 +263,25 @@
   </div>
 
   <div id="chat-screen">
-    <button class="report-btn" onclick="openReport()">
-      <svg viewBox="0 0 24 24"><path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zM5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-      Technical Report
-    </button>
+    <div class="top-bar">
+      <button class="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        Scan another URL
+      </button>
+      <button class="report-btn" onclick="openReport()">
+        <svg viewBox="0 0 24 24"><path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zM5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        Technical Report
+      </button>
+    </div>
 
     <div class="chat-window" id="chat-window"></div>
     <div class="chat-input-area">
       <div class="confidence-bar" id="confidence-bar" onclick="sendConfidenceQuery()">
         <span class="confidence-bar-text">How confident are you in this assessment?</span>
+        <button class="send-btn"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
+      </div>
+      <div class="confidence-bar" id="clicked-bar" onclick="sendClickedQuery()">
+        <span class="confidence-bar-text">What should I do if I already clicked it?</span>
         <button class="send-btn"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
       </div>
     </div>
@@ -262,6 +303,7 @@
 
   <script>
     const RESULT        = {{ result | tojson if result else 'null' }};
+    const ALL_FLAGS     = RESULT && RESULT.all_flags ? RESULT.all_flags : [];
     const SUBMITTED_URL = {{ submitted_url | tojson }};
     const wait          = ms => new Promise(r => setTimeout(r, ms));
 
@@ -275,6 +317,20 @@
       e.preventDefault();
       document.getElementById('landing').style.animation = 'fadeOut 0.3s ease forwards';
       setTimeout(() => e.target.submit(), 280);
+    }
+
+    function goBack() {
+      document.getElementById('chat-screen').style.display = 'none';
+      // Reset question buttons for next scan
+      document.getElementById('confidence-bar').classList.remove('sent');
+      document.getElementById('clicked-bar').classList.remove('sent');
+      // Clear chat window for next scan
+      document.getElementById('chat-window').innerHTML = '';
+      const landing = document.getElementById('landing');
+      landing.style.display = 'block';
+      landing.style.animation = 'fadeInUp 0.35s ease both';
+      document.getElementById('url-input').value = '';
+      document.getElementById('url-input').focus();
     }
 
     function appendBubble(side, html) {
@@ -310,13 +366,11 @@
       await wait(650); showTyping(); await wait(1150); removeTyping();
 
       if (isPhishing) {
-        // Bubble 1: verdict
         appendBubble('system', `
-          <div class="verdict-label phishing">⚠ PHISHING DETECTED</div>
+          <div class="verdict-label phishing">PHISHING DETECTED</div>
           <div class="verdict-explanation">This URL has been flagged as a phishing attempt.</div>
         `);
 
-        // Bubble 2: top flags
         await wait(500); showTyping(); await wait(900); removeTyping();
         const flags = result.flags || [];
         const chipsHtml = flags.length
@@ -332,7 +386,6 @@
           ${chipsHtml}
         `);
 
-        // Bubble 3: caution advice
         await wait(500); showTyping(); await wait(850); removeTyping();
         appendBubble('system', `
           <div class="caution-text">
@@ -341,9 +394,8 @@
         `);
 
       } else {
-        // Legit — original single bubble
         appendBubble('system', `
-          <div class="verdict-label legit">✓ LEGITIMATE</div>
+          <div class="verdict-label legit">LEGITIMATE</div>
           <div class="verdict-explanation">This URL does not contain strong phishing indicators and appears structurally normal.</div>
         `);
       }
@@ -357,6 +409,52 @@
       const tone = p ? 'This URL shows strong phishing indicators — exercise caution.'
                      : 'The URL appears structurally normal with no significant phishing signals.';
       appendBubble('system', `The system is <strong style="color:#e0e0e8">${esc(String(RESULT.confidence))}%</strong> confident. ${esc(tone)}`);
+    }
+
+    async function sendClickedQuery() {
+      document.getElementById('clicked-bar').classList.add('sent');
+      appendBubble('user', 'What should I do if I already clicked it?');
+      await wait(550); showTyping(); await wait(1100); removeTyping();
+
+      const isPhishing = RESULT && RESULT.label === 'PHISHING';
+
+      if (isPhishing) {
+        appendBubble('system', `
+          <div class="flags-header" style="margin-bottom:11px;">Immediate steps to take</div>
+          <div class="action-step">
+            <div class="step-number">1</div>
+            <span><strong style="color:var(--text)">Do not enter anything.</strong> Close the tab immediately if you have not submitted any information.</span>
+          </div>
+          <div class="action-step">
+            <div class="step-number">2</div>
+            <span><strong style="color:var(--text)">Change your passwords</strong> for any accounts you may have entered credentials for, starting with your email and banking accounts.</span>
+          </div>
+          <div class="action-step">
+            <div class="step-number">3</div>
+            <span><strong style="color:var(--text)">Enable two-factor authentication</strong> on any accounts that may have been compromised.</span>
+          </div>
+          <div class="action-step">
+            <div class="step-number">4</div>
+            <span><strong style="color:var(--text)">Run a malware scan</strong> on your device — some phishing pages silently attempt to install malicious software.</span>
+          </div>
+          <div class="action-step">
+            <div class="step-number">5</div>
+            <span><strong style="color:var(--text)">Contact your bank</strong> immediately if you entered any payment details.</span>
+          </div>
+        `);
+      } else {
+        appendBubble('system', `
+          <div class="flags-header" style="margin-bottom:11px;">No immediate action required</div>
+          <div class="action-step">
+            <div class="step-number safe">✓</div>
+            <span>This URL was assessed as <strong style="color:var(--green-tag)">legitimate</strong>. Clicking it is unlikely to have caused harm.</span>
+          </div>
+          <div class="action-step">
+            <div class="step-number safe">✓</div>
+            <span>If anything on the page felt suspicious regardless — unexpected login prompts, strange redirects — trust your instincts and change your passwords as a precaution.</span>
+          </div>
+        `);
+      }
     }
 
     // ── Report panel ──
@@ -407,7 +505,49 @@
           <td>${m.support != null ? Math.round(m.support) : '—'}</td>
         </tr>`).join('');
 
+      // Build flags section from current scan result
+      let flagsSection = '';
+      if (RESULT) {
+        const verdict = RESULT.label === 'PHISHING';
+
+        let flagsBody = '';
+        if (ALL_FLAGS.length === 0) {
+          flagsBody = `<p style="color:var(--green-tag);font-size:0.8rem;">No heuristic flags were triggered for this URL.</p>`;
+        } else {
+          flagsBody = ALL_FLAGS.map(f => `
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+              <div style="
+                min-width:22px;height:22px;border-radius:5px;
+                background:${f.severity >= 8 ? 'rgba(255,64,96,0.18)' : f.severity >= 5 ? 'rgba(255,140,0,0.15)' : 'rgba(255,255,255,0.07)'};
+                border:1px solid ${f.severity >= 8 ? 'rgba(255,64,96,0.35)' : f.severity >= 5 ? 'rgba(255,140,0,0.3)' : 'rgba(255,255,255,0.12)'};
+                color:${f.severity >= 8 ? 'var(--red)' : f.severity >= 5 ? '#ffaa40' : 'var(--text-dim)'};
+                font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+              ">${f.severity}</div>
+              <div style="color:var(--text);font-size:0.82rem;line-height:1.4;">${esc(f.label)}</div>
+            </div>`).join('');
+        }
+
+        flagsSection = `
+          <div class="metric-section">
+            <div class="metric-section-title">Current Scan — Triggered Heuristics</div>
+            <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:0.8rem;color:var(--text-dim);">Verdict:</span>
+              <span style="font-size:0.8rem;font-weight:600;color:${verdict ? 'var(--red)' : 'var(--green-tag)'};">
+                ${verdict ? 'PHISHING' : 'LEGITIMATE'}
+              </span>
+              <span style="font-size:0.8rem;color:var(--text-dim);margin-left:auto;">${esc(String(RESULT.confidence))}% confidence</span>
+            </div>
+            <div style="font-size:0.7rem;color:var(--text-dim);margin-bottom:10px;display:flex;gap:14px;">
+              <span><span style="color:var(--red);font-weight:600;"></span> High (8–10)</span>
+              <span><span style="color:#ffaa40;font-weight:600;"></span> Medium (5–7)</span>
+              <span><span style="color:var(--text-dim);font-weight:600;"></span> Low (1–4)</span>
+            </div>
+            ${flagsBody}
+          </div>`;
+      }
+
       document.getElementById('panel-body').innerHTML = `
+        ${flagsSection}
         <div class="metric-section">
           <div class="metric-section-title">Per-Class Breakdown</div>
           <table class="report-table">
